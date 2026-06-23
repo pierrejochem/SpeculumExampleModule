@@ -21,32 +21,19 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
-      packages: read
       security-events: write
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
-
+      # build-mode: none extracts source without compiling. Avoids CodeQL's
+      # Kotlin extractor, which only supports Kotlin < 2.3.30 (this project is
+      # on 2.4.0) and otherwise fails compileKotlin with KotlinVersionTooRecent.
+      # No build means no mirror-api resolution, so packages: read is unneeded.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: manual
-
-      - name: Build
-        run: ./gradlew build -x test --stacktrace
-        env:
-          # mirror-api resolves from GitHub Packages (see settings.gradle.kts).
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

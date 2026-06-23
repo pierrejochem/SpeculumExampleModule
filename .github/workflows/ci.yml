@@ -19,6 +19,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      checks: write # dorny/test-reporter publishes a check run
     steps:
       - uses: actions/checkout@v7
 
@@ -40,6 +41,15 @@ jobs:
           # mirror-api resolves from GitHub Packages (see settings.gradle.kts).
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: JUnit Tests
+          path: "**/build/test-results/test/*.xml"
+          reporter: java-junit
+          fail-on-error: false
 
       - name: Upload reports
         if: always()

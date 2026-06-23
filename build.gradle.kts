@@ -32,13 +32,30 @@ dependencies {
     compileOnly(libs.compose.foundation)
     compileOnly(libs.compose.material3)
     compileOnly(libs.kotlinx.coroutines.core)
+
+    // Tests need the real artifacts on the classpath (main uses compileOnly
+    // because the host app supplies them at runtime).
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mirror.api)
+    testImplementation(libs.compose.runtime)
+    testImplementation(libs.compose.foundation)
+    testImplementation(libs.compose.material3)
+    testImplementation(libs.kotlinx.coroutines.core)
+    // Compose desktop UI testing (runComposeUiTest + Skiko rendering runtime).
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(compose.desktop.currentOs)
 }
+
+tasks.withType<Test> { useJUnitPlatform() }
 
 // Copy the built JAR into a Speculum install's `plugins/` folder so the app
 // discovers it at startup. Point it at your checkout with
 //   ./gradlew deployToMirror -Pspeculum.pluginsDir=/path/to/Speculum/plugins
 // or the SPECULUM_PLUGINS_DIR env var. Defaults to build/plugins/ otherwise.
-val deployToMirror by tasks.registering(Copy::class) {
+tasks.register<Copy>("deployToMirror") {
     description = "Builds the module JAR and copies it into a Speculum install's plugins/ folder."
     from(tasks.named("jar"))
     into(
