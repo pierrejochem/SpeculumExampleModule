@@ -6,7 +6,7 @@ coroutines = "1.11.0"
 # The published Speculum plugin API to compile against (release tag without "v").
 mirrorApi = "0.5.7"
 # Quality gates.
-ktlint = "13.1.0" # gradle plugin org.jlleitschuh.gradle.ktlint
+ktlint = "14.2.0" # gradle plugin org.jlleitschuh.gradle.ktlint
 detekt = "1.23.8"
 
 [libraries]
