@@ -1,0 +1,22 @@
+[versions]
+kotlin = "2.4.0"
+compose = "1.11.1"
+composeMaterial3 = "1.9.0" # material3 is versioned independently of the Compose BOM
+coroutines = "1.11.0"
+# The published Speculum plugin API to compile against (release tag without "v").
+mirrorApi = "0.5.7"
+
+[libraries]
+# Compose artifacts declared directly (the `compose.runtime`/`material3`/… DSL
+# accessors are deprecated in Compose 1.11). material3 has its own version.
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMaterial3" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+# Speculum plugin API: MirrorModule, ModuleFactory, ModuleConfig, MirrorColors, …
+mirror-api = { module = "org.speculum:mirror-api", version.ref = "mirrorApi" }
+
+[plugins]
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
