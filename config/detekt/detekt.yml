@@ -1,0 +1,16 @@
+# detekt configuration — layered on top of the bundled defaults
+# (buildUponDefaultConfig = true in build.gradle.kts). Only the relaxations
+# that suit a small Compose example module are listed here.
+
+style:
+  MagicNumber:
+    # Compose UI code is full of literal dp/sp/weight values; flagging them
+    # adds noise without improving this reference module.
+    active: false
+  MaxLineLength:
+    maxLineLength: 120
+
+complexity:
+  LongMethod:
+    # Composable functions legitimately grow past the default threshold.
+    threshold: 80
