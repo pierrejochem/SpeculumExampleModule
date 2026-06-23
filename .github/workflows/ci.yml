@@ -12,6 +12,10 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    # Dependabot PRs run with a read-only token, so packages: read is denied
+    # and mirror-api can't resolve from GitHub Packages. The build is
+    # re-validated on push once the bump is merged.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       packages: read
