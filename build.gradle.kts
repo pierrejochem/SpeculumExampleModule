@@ -4,10 +4,17 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("config/detekt/detekt.yml"))
 }
 
 java {
@@ -37,6 +44,9 @@ val deployToMirror by tasks.registering(Copy::class) {
     into(
         providers.gradleProperty("speculum.pluginsDir").orNull
             ?: System.getenv("SPECULUM_PLUGINS_DIR")
-            ?: layout.buildDirectory.dir("plugins").get().asFile.path
+            ?: layout.buildDirectory
+                .dir("plugins")
+                .get()
+                .asFile.path,
     )
 }

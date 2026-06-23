@@ -23,8 +23,9 @@ import org.speculum.ui.MirrorColors
  *
  * Config keys: greeting (default "Hello, Speculum!"), tickStep (default 1).
  */
-class ExampleModule(config: ModuleConfig) : MirrorModule(config) {
-
+class ExampleModule(
+    config: ModuleConfig,
+) : MirrorModule(config) {
     private val greeting = config.string("greeting", "Hello, Speculum!")
     private val tickStep = config.int("tickStep", 1)
 
