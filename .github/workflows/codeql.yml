@@ -15,6 +15,10 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    # Dependabot PRs run with a read-only token (security-events: write and
+    # packages: read are denied), so CodeQL upload + mirror-api resolution
+    # fail. Merged code is still scanned via the push + schedule triggers.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       packages: read
