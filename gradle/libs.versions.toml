@@ -9,7 +9,7 @@ mirrorApi = "1.0.0"
 ktlint = "14.2.0" # gradle plugin org.jlleitschuh.gradle.ktlint
 detekt = "1.23.8"
 # Testing.
-junit = "6.1.0"
+junit = "6.1.1"
 
 [libraries]
 # Compose artifacts declared directly (the `compose.runtime`/`material3`/… DSL
