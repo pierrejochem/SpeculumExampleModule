@@ -3,6 +3,8 @@
 A standalone, independently buildable reference for writing an **external module**
 for the [Speculum smart-mirror dashboard](https://github.com/pierrejochem/SpeculumSmartMirror).
 
+📖 **[Developer guide](https://pierrejochem.github.io/SpeculumExampleModule/)** — quickstart, module anatomy, and declaring settings.
+
 It builds to a thin JAR that the Speculum app discovers at runtime — no app
 rebuild, no source checkout of the mirror required. It demonstrates the full
 module API: config reading, the `start()` / `refresh()` / `stop()` lifecycle,
@@ -25,7 +27,8 @@ last notification it received.
   `URLClassLoader`, and finds factories via the JDK `ServiceLoader`.
 - The factory declares its config options through `settingsSchema()`, so the
   Speculum admin console renders real controls for them. See
-  [Module settings](#module-settings).
+  [Module settings](#module-settings), or the guide's
+  [Settings Schema](https://pierrejochem.github.io/SpeculumExampleModule/settings-schema.html) page.
 
 ## Requirements
 
@@ -130,6 +133,18 @@ config a freshly added module gets.
 The method has a default empty implementation, so a module that declares nothing
 still works and simply keeps the raw key/value rows. Any key saved in a config
 but absent from the schema also falls back to a raw row.
+
+## Documentation
+
+| Page | Covers |
+| --- | --- |
+| [Developer guide](https://pierrejochem.github.io/SpeculumExampleModule/) | Overview and how the host discovers a plugin. |
+| [Quickstart](https://pierrejochem.github.io/SpeculumExampleModule/quickstart.html) | Run the released JAR, or build and deploy from source. |
+| [Module Anatomy](https://pierrejochem.github.io/SpeculumExampleModule/module-anatomy.html) | Every file in the project and what the host does with it. |
+| [Settings Schema](https://pierrejochem.github.io/SpeculumExampleModule/settings-schema.html) | Declaring options the admin console renders as typed controls. |
+| [mirror-api Reference](https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html) | The published API this module compiles against. |
+
+The guide is published from [`docs/`](docs/) via GitHub Pages.
 
 ## Bumping the API version
 

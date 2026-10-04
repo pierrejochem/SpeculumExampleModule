@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quickstart — Speculum Example Module</title>
+<meta name="description" content="Run the prebuilt Speculum example module JAR, or build it from source with a GitHub Packages token, then deploy it into a Speculum install's plugins folder.">
+<link rel="icon" href="assets/img/icon.svg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="canonical" href="https://pierrejochem.github.io/SpeculumExampleModule/quickstart.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Speculum Example Module">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://pierrejochem.github.io/SpeculumExampleModule/quickstart.html">
+<meta property="og:title" content="Quickstart — Speculum Example Module">
+<meta property="og:description" content="Run the prebuilt Speculum example module JAR, or build it from source with a GitHub Packages token, then deploy it into a Speculum install's plugins folder.">
+<meta property="og:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Quickstart — Speculum Example Module">
+<meta name="twitter:description" content="Run the prebuilt Speculum example module JAR, or build it from source with a GitHub Packages token, then deploy it into a Speculum install's plugins folder.">
+<meta name="twitter:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><img src="assets/img/icon.svg" alt=""> Example Module</a>
+    <button class="menu-toggle" aria-label="Menu" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    <nav class="nav-links" id="nav">
+      <a href="index.html">Home</a>
+      <a href="quickstart.html" class="active">Quickstart</a>
+      <a href="module-anatomy.html">Module Anatomy</a>
+      <a href="settings-schema.html">Settings Schema</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <p class="kicker">Quickstart</p>
+  <h1>From zero to a module on screen</h1>
+  <p class="lead">Two routes: download the released JAR, or build it yourself. The download needs no credentials; building does, because Gradle resolves <code>mirror-api</code> from GitHub Packages.</p>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#download">Route A — use the released JAR</a></li>
+      <li><a href="#requirements">Route B — requirements</a></li>
+      <li><a href="#token">Credentials for GitHub Packages</a></li>
+      <li><a href="#build">Build</a></li>
+      <li><a href="#deploy">Deploy and run</a></li>
+      <li><a href="#api-version">Choosing a mirror-api version</a></li>
+    </ul>
+  </div>
+
+  <h2 id="download">Route A — use the released JAR</h2>
+  <p>Every <code>v*</code> tag publishes the built JAR as a release asset. Downloading an asset does <em>not</em> go through GitHub Packages, so no token is involved:</p>
+  <pre><code>curl -LO https://github.com/pierrejochem/SpeculumExampleModule/releases/latest/download/SpeculumExampleModule.jar
+cp SpeculumExampleModule.jar /path/to/Speculum/plugins/</code></pre>
+  <p>Restart the mirror and the module appears at <code>top_center</code>. The current release is <a href="https://github.com/pierrejochem/SpeculumExampleModule/releases/tag/v1.1.0">v1.1.0</a>, which needs <code>mirror-api</code> 1.3.0 — that is Speculum v1.3.0 or newer.</p>
+
+  <h2 id="requirements">Route B — requirements</h2>
+  <ul>
+    <li><strong>JDK 17–21.</strong> The bundled Gradle wrapper runs on these; a newer default <code>java</code> needs <code>JAVA_HOME</code> or <code>org.gradle.java.home</code> pointed at one.</li>
+    <li><strong>A GitHub personal access token</strong> with the <code>read:packages</code> scope.</li>
+  </ul>
+  <div class="note"><strong>Why a token for a public package:</strong> <code>org.speculum:mirror-api</code> is public, but GitHub's Maven registry still requires authentication for every download. This is a registry policy, not a permission on the package.</div>
+
+  <h2 id="token">Credentials for GitHub Packages</h2>
+  <p>Keep them out of the repository. Either put them in your <em>user</em> Gradle properties:</p>
+  <pre><code># ~/.gradle/gradle.properties
+gpr.user=&lt;your-github-username&gt;
+gpr.token=&lt;a-PAT-with-read:packages&gt;</code></pre>
+  <p>…or export them instead:</p>
+  <pre><code>export GITHUB_ACTOR=&lt;your-github-username&gt;
+export GITHUB_TOKEN=&lt;a-PAT-with-read:packages&gt;</code></pre>
+  <div class="warn"><strong>Never commit the token.</strong> The repository's own <code>gradle.properties</code> deliberately contains no credentials — only a comment pointing here.</div>
+
+  <h2 id="build">Build</h2>
+  <pre><code>git clone https://github.com/pierrejochem/SpeculumExampleModule.git
+cd SpeculumExampleModule
+./gradlew jar</code></pre>
+  <p>The JAR lands in <code>build/libs/SpeculumExampleModule.jar</code>. Check the thin-JAR contract — it should hold only the <code>example</code> classes and the service file, with no Compose or <code>mirror-api</code> classes inside:</p>
+  <pre><code>unzip -l build/libs/SpeculumExampleModule.jar</code></pre>
+  <p><code>./gradlew build</code> additionally runs ktlint, detekt and the test suite.</p>
+
+  <h2 id="deploy">Deploy and run</h2>
+  <p>Point the <code>deployToMirror</code> task at a Speculum checkout or install:</p>
+  <pre><code>./gradlew deployToMirror -Pspeculum.pluginsDir=/path/to/Speculum/plugins</code></pre>
+  <p>The <code>SPECULUM_PLUGINS_DIR</code> environment variable does the same. With neither set the JAR is copied to <code>build/plugins/</code> for you to move yourself.</p>
+  <p>Then start the mirror the usual way (see <a href="https://pierrejochem.github.io/SpeculumSmartMirror/getting-started.html">Speculum's Getting Started</a>). The module is discovered on startup — nothing to register.</p>
+
+  <h2 id="api-version">Choosing a mirror-api version</h2>
+  <p><code>mirror-api</code> is published on every <code>v*</code> tag of the Speculum project; the artifact version is the tag without its leading <code>v</code>. Set it in <code>gradle/libs.versions.toml</code>:</p>
+  <pre><code>[versions]
+mirrorApi = "1.3.0"</code></pre>
+  <p>Pin the oldest version whose API you actually use — a module compiled against an older <code>mirror-api</code> still loads in a newer host, because added SPI methods carry default implementations. <code>settingsSchema()</code> is the reason this project needs 1.3.0.</p>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <span>Speculum Example Module — reference plugin for the Speculum smart-mirror dashboard.</span>
+    <span class="footer-links">
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule/releases">Releases</a>
+      <a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html">mirror-api Reference</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
