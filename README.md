@@ -48,6 +48,19 @@ export GITHUB_ACTOR=<your-github-username>
 export GITHUB_TOKEN=<a-PAT-with-read:packages>
 ```
 
+## Releases
+
+Every `v*` tag publishes the built JAR as a
+[GitHub Release](https://github.com/pierrejochem/SpeculumExampleModule/releases).
+The current release is
+**[v1.1.0](https://github.com/pierrejochem/SpeculumExampleModule/releases/tag/v1.1.0)**,
+which adds [`settingsSchema()`](#module-settings) and needs `mirror-api` 1.3.0
+(Speculum v1.3.0 or newer).
+
+Grabbing `SpeculumExampleModule.jar` from there and dropping it in a Speculum
+install's `plugins/` folder is enough to run it — no token and no build needed,
+since downloading a release asset does not go through GitHub Packages.
+
 ## Build
 
 ```bash
