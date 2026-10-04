@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speculum Example Module — write a Speculum plugin in one thin JAR</title>
+<meta name="description" content="Reference plugin for the Speculum smart-mirror dashboard. Build a thin JAR the app discovers at runtime: MirrorModule lifecycle, the ModuleFactory SPI, and settings the admin console renders.">
+<link rel="icon" href="assets/img/icon.svg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="canonical" href="https://pierrejochem.github.io/SpeculumExampleModule/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Speculum Example Module">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://pierrejochem.github.io/SpeculumExampleModule/">
+<meta property="og:title" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta property="og:description" content="Reference plugin for the Speculum smart-mirror dashboard. Build a thin JAR the app discovers at runtime: MirrorModule lifecycle, the ModuleFactory SPI, and settings the admin console renders.">
+<meta property="og:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta name="twitter:description" content="Reference plugin for the Speculum smart-mirror dashboard. Build a thin JAR the app discovers at runtime: MirrorModule lifecycle, the ModuleFactory SPI, and settings the admin console renders.">
+<meta name="twitter:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "Speculum Example Module",
+      "description": "A standalone reference plugin for the Speculum smart-mirror dashboard: a thin JAR discovered at runtime via ServiceLoader, demonstrating MirrorModule's lifecycle, the ModuleFactory SPI, and settingsSchema().",
+      "url": "https://pierrejochem.github.io/SpeculumExampleModule/",
+      "codeRepository": "https://github.com/pierrejochem/SpeculumExampleModule",
+      "programmingLanguage": "Kotlin",
+      "runtimePlatform": "JVM",
+      "license": "https://github.com/pierrejochem/SpeculumExampleModule/blob/main/LICENSE",
+      "author": { "@type": "Person", "name": "Pierre Jochem" },
+      "isPartOf": {
+        "@type": "SoftwareApplication",
+        "name": "Speculum",
+        "url": "https://pierrejochem.github.io/SpeculumSmartMirror/"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "headline": "Write a Speculum plugin in one thin JAR",
+      "description": "Developer guide to building an external Speculum module: project setup, the MirrorModule lifecycle, the ModuleFactory service, and declaring settings the admin console renders.",
+      "url": "https://pierrejochem.github.io/SpeculumExampleModule/",
+      "proficiencyLevel": "Beginner",
+      "dependencies": "JDK 17-21, Gradle, org.speculum:mirror-api 1.3.0",
+      "author": { "@type": "Person", "name": "Pierre Jochem" }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><img src="assets/img/icon.svg" alt=""> Example Module</a>
+    <button class="menu-toggle" aria-label="Menu" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    <nav class="nav-links" id="nav">
+      <a href="index.html" class="active">Home</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="module-anatomy.html">Module Anatomy</a>
+      <a href="settings-schema.html">Settings Schema</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <p class="kicker">Developer guide</p>
+  <h1>Write a Speculum plugin in one thin JAR</h1>
+  <p class="lead">A standalone, independently buildable reference module for the
+  <a href="https://pierrejochem.github.io/SpeculumSmartMirror/">Speculum smart-mirror dashboard</a>. No app rebuild, no source checkout of the mirror — drop a JAR in <code>plugins/</code> and it appears on screen.</p>
+
+  <div class="btn-row">
+    <a class="btn" href="quickstart.html">Start here</a>
+    <a class="btn" href="https://github.com/pierrejochem/SpeculumExampleModule/releases/latest">Download the JAR</a>
+    <a class="btn" href="https://github.com/pierrejochem/SpeculumExampleModule">Source on GitHub</a>
+  </div>
+
+  <h2 id="what">What this is</h2>
+  <p>Speculum loads external modules from JARs at runtime. This repository is the smallest complete example of one: a Gradle project with a single module that renders a greeting, a refresh counter and the last notification it received, placed at <code>top_center</code>.</p>
+  <p>It exercises the whole plugin surface, so you can copy it and delete what you do not need:</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Runtime discovery</h3>
+      <p>A <code>ModuleFactory</code> declared in <code>META-INF/services</code>, found by the JDK <code>ServiceLoader</code> — no registration in the host app.</p>
+    </div>
+    <div class="card">
+      <h3>Lifecycle</h3>
+      <p><code>start()</code>, a periodic <code>refresh()</code>, <code>stop()</code>, plus the notification bus and a Compose <code>Content()</code>.</p>
+    </div>
+    <div class="card">
+      <h3>Typed settings</h3>
+      <p><code>settingsSchema()</code> tells the admin console what options exist, so they render as real controls instead of raw text rows.</p>
+    </div>
+    <div class="card">
+      <h3>Thin JAR</h3>
+      <p><code>compileOnly</code> against <code>mirror-api</code> and Compose: the built JAR holds only your classes, around 11&nbsp;KB.</p>
+    </div>
+  </div>
+
+  <h2 id="how">How the host finds it</h2>
+  <ol>
+    <li>You build a JAR and put it in the Speculum install's <code>plugins/</code> folder.</li>
+    <li>On startup the app scans <code>plugins/*.jar</code> and loads each one in a <code>URLClassLoader</code> whose parent is the app, so Compose and <code>mirror-api</code> come from the host.</li>
+    <li>It asks the JDK <code>ServiceLoader</code> for every <code>org.speculum.core.ModuleFactory</code> on that classloader.</li>
+    <li>Each factory contributes <code>defaultConfig()</code>, so the module is placed and configured without anyone editing <code>config.json</code>.</li>
+  </ol>
+  <div class="note"><strong>Why <code>compileOnly</code>:</strong> the API and Compose are provided by the host at runtime through the parent classloader. Bundling them would bloat the JAR and risk loading two copies of the same classes.</div>
+
+  <h2 id="read">Where to go next</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Page</th><th>What it covers</th></tr></thead>
+    <tbody>
+      <tr><td><a href="quickstart.html">Quickstart</a></td><td>Run the prebuilt JAR, or build from source and deploy it into a mirror.</td></tr>
+      <tr><td><a href="module-anatomy.html">Module Anatomy</a></td><td>Every file in the project and what the host does with it.</td></tr>
+      <tr><td><a href="settings-schema.html">Settings Schema</a></td><td>Declaring options so the admin console renders typed controls.</td></tr>
+      <tr><td><a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html">mirror-api Reference</a></td><td>The full published API: <code>MirrorModule</code>, <code>ModuleConfig</code>, <code>Region</code>, <code>SettingSpec</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <span>Speculum Example Module — reference plugin for the Speculum smart-mirror dashboard.</span>
+    <span class="footer-links">
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule/releases">Releases</a>
+      <a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html">mirror-api Reference</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

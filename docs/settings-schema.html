@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings Schema — Speculum Example Module</title>
+<meta name="description" content="Declare a Speculum module's config options with settingsSchema() and SettingSpec so the admin console renders labelled, typed controls instead of raw key/value rows.">
+<link rel="icon" href="assets/img/icon.svg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="canonical" href="https://pierrejochem.github.io/SpeculumExampleModule/settings-schema.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Speculum Example Module">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://pierrejochem.github.io/SpeculumExampleModule/settings-schema.html">
+<meta property="og:title" content="Settings Schema — Speculum Example Module">
+<meta property="og:description" content="Declare a Speculum module's config options with settingsSchema() and SettingSpec so the admin console renders labelled, typed controls instead of raw key/value rows.">
+<meta property="og:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Settings Schema — Speculum Example Module">
+<meta name="twitter:description" content="Declare a Speculum module's config options with settingsSchema() and SettingSpec so the admin console renders labelled, typed controls instead of raw key/value rows.">
+<meta name="twitter:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><img src="assets/img/icon.svg" alt=""> Example Module</a>
+    <button class="menu-toggle" aria-label="Menu" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    <nav class="nav-links" id="nav">
+      <a href="index.html">Home</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="module-anatomy.html">Module Anatomy</a>
+      <a href="settings-schema.html" class="active">Settings Schema</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <p class="kicker">Settings Schema</p>
+  <h1>Make your options real controls</h1>
+  <p class="lead">The Speculum admin console knows nothing about any module by name. It renders whatever <code>settingsSchema()</code> returns — declare your keys and they become labelled, typed, validated inputs.</p>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#why">What changes</a></li>
+      <li><a href="#example">The example module's schema</a></li>
+      <li><a href="#types">Types</a></li>
+      <li><a href="#defaults">default vs. defaultConfig()</a></li>
+      <li><a href="#advanced">Advanced, help and placeholders</a></li>
+      <li><a href="#preview">Preview templates</a></li>
+      <li><a href="#fallback">What happens without a schema</a></li>
+      <li><a href="#testing">Testing your schema</a></li>
+    </ul>
+  </div>
+
+  <h2 id="why">What changes</h2>
+  <p>Without a schema, every option in the console is an untyped pair of text boxes: the author types the key, then the value, with no label, no bounds and no hint about what is allowed. With one, the console draws a dropdown for an enum, a checkbox for a boolean, a bounded number field for an int, and a sentence of help underneath.</p>
+  <p>The schema travels from your JAR to the browser: the config-server loads your factory through the same <code>ServiceLoader</code> the mirror uses and serves the result on <code>GET /api/modules</code>.</p>
+  <div class="note">Added in <code>mirror-api</code> <strong>1.3.0</strong>, which ships with Speculum v1.3.0. The method has a default empty implementation, so older plugins keep compiling and loading unchanged.</div>
+
+  <h2 id="example">The example module's schema</h2>
+  <p>This module reads two keys, <code>greeting</code> and <code>tickStep</code>, and declares both:</p>
+  <pre><code>override fun settingsSchema(): List&lt;SettingSpec&gt; =
+    listOf(
+        SettingSpec(
+            key = "greeting",
+            label = "Greeting",
+            default = "Hello, Speculum!",
+            help = "Headline text shown at the top of the module.",
+        ),
+        SettingSpec(
+            key = "tickStep",
+            label = "Tick step",
+            type = SettingType.INT,
+            default = "1",
+            min = 1,
+            max = 100,
+            help = "How much the refresh counter advances on each refresh.",
+        ),
+    )</code></pre>
+
+  <h2 id="types">Types</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>Control</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>STRING</code></td><td>Single-line text field</td><td>The default when <code>type</code> is omitted.</td></tr>
+      <tr><td><code>INT</code></td><td>Number field</td><td>Bounded by <code>min</code>/<code>max</code>, stepped by <code>step</code>.</td></tr>
+      <tr><td><code>BOOL</code></td><td>Checkbox</td><td>Stores the strings <code>"true"</code>/<code>"false"</code>.</td></tr>
+      <tr><td><code>ENUM</code></td><td>Dropdown over <code>options</code></td><td>A saved value no longer offered stays selectable rather than being silently rewritten.</td></tr>
+      <tr><td><code>TEXT</code></td><td>Textarea</td><td>For multi-line values.</td></tr>
+      <tr><td><code>URL</code></td><td>Full-width text field</td><td>With URL-shaped validation.</td></tr>
+      <tr><td><code>IP</code></td><td>Dropdown of detected host addresses</td><td>Plus an auto-detect entry.</td></tr>
+      <tr><td><code>CUSTOM</code></td><td>A purpose-built editor</td><td>Looked up by <code>editor</code> name; falls back to a textarea when the console has none.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <pre><code>SettingSpec(
+    key = "units", label = "Units", type = SettingType.ENUM,
+    default = "metric", options = listOf("metric", "imperial"),
+)</code></pre>
+
+  <h2 id="defaults">default vs. defaultConfig()</h2>
+  <p>These two are easy to conflate and mean different things:</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th><code>SettingSpec.default</code></th><th><code>defaultConfig()</code></th></tr></thead>
+    <tbody>
+      <tr><td>What it is</td><td>The fallback your module code reads when the key is absent.</td><td>The starting config a freshly added module is given.</td></tr>
+      <tr><td>Where it shows</td><td>As the hint in an empty field.</td><td>As an actual saved value.</td></tr>
+      <tr><td>Stored?</td><td>No.</td><td>Yes, written into <code>config.json</code>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>They may legitimately differ. This module's <code>tickStep</code> has <code>default = "1"</code> because <code>config.int("tickStep", 1)</code> is what the code falls back to, while <code>defaultConfig()</code> seeds <code>"2"</code> to make the counter visibly move on first run.</p>
+  <div class="warn"><strong>Keep <code>default</code> in sync with your code.</strong> It is the number the console shows as "what happens if I leave this blank". If the two drift, the hint lies.</div>
+
+  <h2 id="advanced">Advanced, help and placeholders</h2>
+  <p><code>help</code> renders as a sentence under the control; <code>placeholder</code> fills an empty text field; <code>advanced = true</code> folds an option behind a "show advanced" toggle, which is where rarely-touched tuning belongs:</p>
+  <pre><code>SettingSpec(
+    key = "fadeSpeed", label = "Fade (ms)", type = SettingType.INT,
+    default = "4000", min = 0, max = 60000, step = 500,
+    advanced = true,
+)</code></pre>
+
+  <h2 id="preview">Preview templates</h2>
+  <p>When the effective value is assembled from several keys, <code>preview</code> shows it live. Templates are tried in order; <code>{key}</code> interpolates and <code>{key|fallback}</code> fills in a blank. The first template whose plain references all resolve wins:</p>
+  <pre><code>SettingSpec(
+    key = "url", label = "URL override", type = SettingType.URL,
+    help = "Leave blank to build the address from the IP and port.",
+    preview = listOf("{url}", "http://{ip|&lt;auto LAN IP&gt;}:{port|8080}"),
+)</code></pre>
+
+  <h2 id="fallback">What happens without a schema</h2>
+  <p>Nothing breaks. A module that declares no schema keeps the raw key/value rows, exactly as before the feature existed — which is why plugins built against an older <code>mirror-api</code> still work. The same applies per key: anything saved in a config but absent from the schema falls back to a raw row, so you can describe part of a module and grow the schema later.</p>
+
+  <h2 id="testing">Testing your schema</h2>
+  <p>The cheapest guard is asserting that the schema covers everything <code>defaultConfig()</code> ships, which catches a key added to one and forgotten in the other:</p>
+  <pre><code>@Test
+fun `settingsSchema declares every key the default config ships`() {
+    val undeclared = factory.settingsSchema().undeclaredKeys(factory.defaultConfig().config)
+
+    assertEquals(emptyList(), undeclared, "defaultConfig keys missing from settingsSchema")
+}</code></pre>
+  <p><code>undeclaredKeys</code> is an extension on <code>List&lt;SettingSpec&gt;</code> in <code>org.speculum.config</code>; <code>defaults()</code> alongside it returns the declared defaults as a map. Full reference in the <a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html#settingspec">mirror-api docs</a>.</p>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <span>Speculum Example Module — reference plugin for the Speculum smart-mirror dashboard.</span>
+    <span class="footer-links">
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule/releases">Releases</a>
+      <a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html">mirror-api Reference</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module Anatomy — Speculum Example Module</title>
+<meta name="description" content="Every file in a Speculum plugin and what the host does with it: the ServiceLoader manifest, ModuleFactory, the MirrorModule lifecycle, Compose Content(), and the thin-JAR Gradle setup.">
+<link rel="icon" href="assets/img/icon.svg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="canonical" href="https://pierrejochem.github.io/SpeculumExampleModule/module-anatomy.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Speculum Example Module">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://pierrejochem.github.io/SpeculumExampleModule/module-anatomy.html">
+<meta property="og:title" content="Module Anatomy — Speculum Example Module">
+<meta property="og:description" content="Every file in a Speculum plugin and what the host does with it: the ServiceLoader manifest, ModuleFactory, the MirrorModule lifecycle, Compose Content(), and the thin-JAR Gradle setup.">
+<meta property="og:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Speculum Example Module — write a Speculum plugin in one thin JAR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Module Anatomy — Speculum Example Module">
+<meta name="twitter:description" content="Every file in a Speculum plugin and what the host does with it: the ServiceLoader manifest, ModuleFactory, the MirrorModule lifecycle, Compose Content(), and the thin-JAR Gradle setup.">
+<meta name="twitter:image" content="https://pierrejochem.github.io/SpeculumExampleModule/assets/img/social.png">
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><img src="assets/img/icon.svg" alt=""> Example Module</a>
+    <button class="menu-toggle" aria-label="Menu" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    <nav class="nav-links" id="nav">
+      <a href="index.html">Home</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="module-anatomy.html" class="active">Module Anatomy</a>
+      <a href="settings-schema.html">Settings Schema</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <p class="kicker">Module Anatomy</p>
+  <h1>Every file, and what the host does with it</h1>
+  <p class="lead">A Speculum plugin is small enough to read in one sitting. This walks the whole project in the order the host touches it.</p>
+
+  <div class="toc">
+    <strong>On this page</strong>
+    <ul>
+      <li><a href="#layout">Project layout</a></li>
+      <li><a href="#service">The ServiceLoader manifest</a></li>
+      <li><a href="#factory">ModuleFactory</a></li>
+      <li><a href="#lifecycle">MirrorModule lifecycle</a></li>
+      <li><a href="#content">Rendering with Compose</a></li>
+      <li><a href="#notifications">The notification bus</a></li>
+      <li><a href="#gradle">Gradle: staying thin</a></li>
+    </ul>
+  </div>
+
+  <h2 id="layout">Project layout</h2>
+  <pre><code>src/main/kotlin/org/speculum/modules/example/
+  ExampleModule.kt          the module: lifecycle + Compose UI
+  ExampleModuleFactory.kt   the SPI entry point
+src/main/resources/META-INF/services/
+  org.speculum.core.ModuleFactory   one line: the factory's FQN
+src/test/kotlin/…              unit + Compose UI tests
+build.gradle.kts            compileOnly deps, deployToMirror task
+gradle/libs.versions.toml   mirror-api and toolchain versions</code></pre>
+
+  <h2 id="service">The ServiceLoader manifest</h2>
+  <p>One line, and the single thing that makes the JAR discoverable:</p>
+  <pre><code># src/main/resources/META-INF/services/org.speculum.core.ModuleFactory
+org.speculum.modules.example.ExampleModuleFactory</code></pre>
+  <div class="warn"><strong>Easy to get wrong:</strong> the <em>file name</em> must be the fully-qualified interface name, and the <em>contents</em> the fully-qualified implementation name. A typo in either produces no error — the module is silently never loaded.</div>
+
+  <h2 id="factory">ModuleFactory</h2>
+  <p>The SPI the host instantiates. It names the module, builds instances, and supplies the defaults that let the module appear without anyone editing config:</p>
+  <pre><code>class ExampleModuleFactory : ModuleFactory {
+    override val name: String = "example"
+
+    override fun create(config: ModuleConfig): MirrorModule = ExampleModule(config)
+
+    override fun defaultConfig(): ModuleConfig =
+        ModuleConfig(
+            module = "example",
+            position = "top_center",
+            refreshIntervalMs = 3000,
+            config = mapOf("greeting" to "Loaded from JAR!", "tickStep" to "2"),
+        )
+}</code></pre>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Member</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>The <code>module</code> key in config that this factory answers to.</td></tr>
+      <tr><td><code>create(config)</code></td><td>Builds one instance per config entry. Called once at boot.</td></tr>
+      <tr><td><code>defaultConfig()</code></td><td>Appended automatically when no entry names this module. Return <code>null</code> to require an explicit entry.</td></tr>
+      <tr><td><code>settingsSchema()</code></td><td>Declares the options for the admin console. See <a href="settings-schema.html">Settings Schema</a>.</td></tr>
+      <tr><td><code>order</code></td><td>Stacking order inside a region; lower sits higher. JARs load in no particular order, so this keeps layout deterministic.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 id="lifecycle">MirrorModule lifecycle</h2>
+  <p>Read your options once in the constructor, from the <code>ModuleConfig</code> you were handed. The typed accessors fall back when a key is absent:</p>
+  <pre><code>class ExampleModule(config: ModuleConfig) : MirrorModule(config) {
+    private val greeting = config.string("greeting", "Hello, Speculum!")
+    private val tickStep = config.int("tickStep", 1)
+
+    override val refreshIntervalMs: Long = config.refreshIntervalMs.coerceAtLeast(1000)
+}</code></pre>
+  <p>Then three hooks, called by the engine:</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Hook</th><th>When</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr><td><code>start(scope)</code></td><td>Once at boot, with the engine's <code>CoroutineScope</code>.</td><td>Long-lived background work. The scope is cancelled for you on shutdown.</td></tr>
+      <tr><td><code>refresh()</code></td><td>Every <code>refreshIntervalMs</code>, as a suspend function.</td><td>Fetching data. Keep it cancellable; never block the thread.</td></tr>
+      <tr><td><code>stop()</code></td><td>Once on shutdown.</td><td>Releasing anything the scope does not own.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><strong>Clamp your interval.</strong> The example uses <code>coerceAtLeast(1000)</code> so a misconfigured <code>refreshInterval</code> of <code>0</code> cannot spin the refresh loop.</div>
+
+  <h2 id="content">Rendering with Compose</h2>
+  <p>State is ordinary Compose state; writing to it from <code>refresh()</code> recomposes the UI:</p>
+  <pre><code>private var ticks by mutableStateOf(0)
+
+override suspend fun refresh() { ticks += tickStep }
+
+@Composable
+override fun Content() {
+    Column {
+        Text(greeting, color = Color.White, fontSize = 28.sp)
+        Text("Refreshes: $ticks", color = MirrorColors.Normal, fontSize = 18.sp)
+    }
+}</code></pre>
+  <p>Use <code>MirrorColors</code> rather than hand-picked greys. A mirror is a display behind two-way glass, so the palette is tuned for that: <code>Normal</code>, <code>Dimmed</code> and friends stay legible through the coating.</p>
+
+  <h2 id="notifications">The notification bus</h2>
+  <p>Modules receive broadcasts from the engine and from each other. Override the hook and keep it cheap — it runs on the caller's thread:</p>
+  <pre><code>override fun onNotification(notification: Notification) {
+    lastEvent = notification.name
+}</code></pre>
+
+  <h2 id="gradle">Gradle: staying thin</h2>
+  <p>Everything the host provides is <code>compileOnly</code>, which is what keeps the JAR at roughly 11&nbsp;KB:</p>
+  <pre><code>dependencies {
+    compileOnly(libs.mirror.api)
+    compileOnly(libs.compose.runtime)
+    compileOnly(libs.compose.foundation)
+    compileOnly(libs.compose.material3)
+    compileOnly(libs.kotlinx.coroutines.core)
+
+    // Tests need the real artifacts, since compileOnly does not reach them.
+    testImplementation(libs.mirror.api)
+    testImplementation(libs.compose.runtime)
+}</code></pre>
+  <div class="note"><strong>The test gotcha:</strong> <code>compileOnly</code> dependencies are not on the test compile classpath. Every one you need in tests has to be repeated as <code>testImplementation</code>.</div>
+  <p>The <code>deployToMirror</code> task copies the built JAR into a mirror's <code>plugins/</code> folder; see <a href="quickstart.html#deploy">Quickstart</a>.</p>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <span>Speculum Example Module — reference plugin for the Speculum smart-mirror dashboard.</span>
+    <span class="footer-links">
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule">GitHub</a>
+      <a href="https://github.com/pierrejochem/SpeculumExampleModule/releases">Releases</a>
+      <a href="https://pierrejochem.github.io/SpeculumSmartMirror/api-reference.html">mirror-api Reference</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
